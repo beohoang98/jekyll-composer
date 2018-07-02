@@ -28,8 +28,12 @@ const _Compose = class {
         fileView.addFolder('posts');
         fileView.fileClick((target) => {
             const path = $(target).attr('path');
+            const headerInfo = this._drafts.getHeaderInfo(path);
             const content = this._drafts.getDataFile(path);
             this.MDE.value(content);
+            for (const key of $(this.headerElement).serializeArray()) {
+                this.headerElement.elements[key.name].value = headerInfo[key.name];
+            }
             this._current = path;
         });
         for (const file of this._drafts.list) {
@@ -43,9 +47,16 @@ const _Compose = class {
     addMDE(simpleMDE) {
         this.MDE = simpleMDE;
     }
+    addHeaderInput(element) {
+        this.headerElement = element;
+    }
     update() {
         const content = this.MDE.value();
-        this._drafts.updateDataFile(this._current, content);
+        const header = {};
+        for (const key of $(this.headerElement).serializeArray()) {
+            header[key.name] = key.value;
+        }
+        this._drafts.updateDataFile(this._current, content, header);
     }
     save() {
         this._drafts.saveFile(this._current, (err) => {

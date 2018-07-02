@@ -68,11 +68,12 @@ function handleCmd(cmd, path, req, res)
 				
 				files.forEach(file => {
 					if (!file) return;
-					const datafile = fs.readFileSync(pathDrafts + file);
+					const datafile = readJekyllPostSync(pathDrafts + file);
 					json.push({
 						filename: file,
 						path: pathDrafts + file,
-						data: datafile.toString('utf8')
+						data: datafile.data,
+						info: datafile.info
 					});
 				});
 
@@ -131,8 +132,14 @@ function handleCmd(cmd, path, req, res)
 
 			const postData = JSON.parse(data);
 
-			const filename 	= postData['filename'];
-			const filedata	= postData['data'];
+			const filename		= postData['filename'];
+			const fileheader	= postData['header'];
+			const filedata		= postData['data'];
+
+			const headAndBody = "---\n" 
+								+ jsyml.safeDump(fileheader) 
+								+ "\n---\n"
+								+ filedata;
 
 			fs.lstat(filename, (err)=>{
 				if (!!err) {
@@ -144,7 +151,7 @@ function handleCmd(cmd, path, req, res)
 					return;
 				}
 
-				fs.writeFile(filename, filedata, (err)=>{
+				fs.writeFile(filename, headAndBody, (err)=>{
 					if (!!err) {
 						res.write(JSON.stringify({
 							err: true,
@@ -171,23 +178,44 @@ function handleCmd(cmd, path, req, res)
 	}
 }
 
-function readJekyllPost(path, callback)
+/**
+ * 
+ * @param {String} path 
+ * @param {Function} callback 
+ */
+function readJekyllPostSync(path)
 {
-	fs.readFile(path, (err, data)=>{
-		if (!!err) {
-			callback(err, null);
-			return;
-		}
+	const fileData = fs.readFileSync(path, 'utf8');
+	const headerInfo = {
+		title: null,
+		author: null,
+		img: null,
+		categories: null,
+		tags: null
+	}
 
-		const header_regex = /^\s+---(.*)---/;
-		const yaml_header = data.match(header_regex)[1];
-		const header_data = jsyml.parse(yaml_header);
-		const body_data = data.replace(header_regex, '');
+	const header_regex = /^(\s+)?\-\-\-\n+([\S\s]+)\n+\-\-\-\n/;
+	
+	let yaml_header;
+	const yaml_match = fileData.match(header_regex);
+	if (!yaml_match) {
+		yaml_header = "";
+	}
+	else {
+		yaml_header = yaml_match[2];
+	}
 
-		callback(null, {
-			info: header_data,
-			
-		});
-		return;
-	});
+	const header_data = jsyml.safeLoad(yaml_header);
+	for (const key in header_data)
+	{
+		headerInfo[key] = header_data[key];
+	}
+
+
+	const body_data = fileData.replace(header_regex, '');
+
+	return {
+		info: headerInfo,
+		data: body_data
+	};
 }

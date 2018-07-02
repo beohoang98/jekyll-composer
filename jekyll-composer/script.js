@@ -13,6 +13,7 @@ $(document).ready(async ()=>{
 	await composer.init();
 	composer.addTreeView($('#tree-view')[0]);
 	composer.addMDE(simMDE);
+	composer.addHeaderInput($('#header-input')[0]);
 	
 
 	document.addEventListener('keydown', (e)=>{

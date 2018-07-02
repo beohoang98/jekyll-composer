@@ -30,7 +30,7 @@ const _File = class {
             });
             this._listFile = json;
             for (const file of json) {
-                this._mapFile[file.path] = file.data;
+                this._mapFile[file.path] = file;
             }
         });
     }
@@ -40,7 +40,10 @@ const _File = class {
      * @return {String} data of file
      */
     getDataFile(file) {
-        return this._mapFile[file];
+        return this._mapFile[file]['data'];
+    }
+    getHeaderInfo(file) {
+        return this._mapFile[file]['info'];
     }
     get list() {
         return this._listFile;
@@ -50,8 +53,10 @@ const _File = class {
      * @param file filename
      * @param data new raw data
      */
-    updateDataFile(file, data) {
-        this._mapFile[file] = data;
+    updateDataFile(file, data, info) {
+        console.log(file, this._mapFile[file]);
+        this._mapFile[file]['info'] = info;
+        this._mapFile[file]['data'] = data;
     }
     saveFile(file, errFunc) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -59,7 +64,8 @@ const _File = class {
                 method: "POST",
                 body: JSON.stringify({
                     filename: file,
-                    data: this._mapFile[file]
+                    header: this._mapFile[file].info,
+                    data: this._mapFile[file].data
                 })
             }).catch(err => {
                 errFunc(err);
