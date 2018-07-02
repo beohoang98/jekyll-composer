@@ -1,0 +1,18 @@
+{
+  "name": "jekyll-composer",
+  "version": "1.0.0",
+  "description": "composer for jekyll posts",
+  "main": "compose.js",
+  "scripts": {
+    "test": "node jekyll-compose.js"
+  },
+  "author": "BeoHoang",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "jquery": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/jquery": "^3.3.4",
+    "js-yaml": "^3.12.0"
+  }
+}
